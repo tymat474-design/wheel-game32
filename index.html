@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>عجلة الفرصة</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
+      text-align: center;
+      direction: rtl;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .wheel-container {
+      position: relative;
+      margin: 20px auto;
+      width: 300px;
+      height: 300px;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(255,255,255,0.3)
+      
+      
+   { transition: transform 0.3s ease-out;
+    <div class="wheel-container">
+  <canvas id="wheel" width="30px0" height="300"></canvas>
+  <div class="pointer"></div>
+</div>
+}
+
+     .pointer {
+  position: absolute;
+  top: 50%;
+  right: -25px;
+  width: 0;
+  height: 0;
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-left: 25px solid red;
+  transform: translateY(-50%);
+  animation: pulse 1s infinite;
+     }
+    }
+
+    #spin {
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-size: 18px;
+      background-color: #00c6ff;
+      background-image: linear-gradient(to right, #0072ff, #00c6ff);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    #result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .condition {
+      font-size: 14px;
+      margin-top: 10px;
+      color: #eee;
+    }
+
+    #codeInput {
+      margin-top: 15px;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      width: 200px;
+    }
+
+    #checkCode {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <h2>🎯 عجلة الفرصة</h2>
+  <div class="wheel-container">
+    <canvas id="wheel" width="300" height="300"></canvas>
+    <div class="pointer"></div>
+  </div>
+  <button id="spin">SPIN 🎁</button>
+  <p id="result">لديك 0 لفة مجانية</p>
+  <input type="text" id="codeInput" placeholder="أدخل الكود المجاني">
+  <br>
+  <button id="checkCode">تحقق من الكود</button>
+  <p class="condition">شروط الحصول على لفه: شحن مبلغ 40,000 ليرة على الأقل يومياً</p>
+
+  <script>
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const segments = ["5000", "5% bonus", "10000", "50000","25000", "100000"];
+    const colors = ["#000", "#00f", "#000", "#00f", "#000", "#00f"];
+    const probabilities = [60, 20, 5, 5, 5 ,5];
+    let freeSpins = 0;
+    let angle = 0;
+    let spinning = false;
+
+    const validCodes = [
+      "WIN2025", "GIFT100", "TRYME", "LUCKY1", "BONUS22", "FREEPLAY", "SPINNOW",
+      "CODE777", "VIP2025", "SURPRISE", "REWARD", "CHANCE", "WHEELIT", "SPINME",
+      "LUCKYDAY", "GOLDEN", "PRIZE", "FORTUNE", "EXTRA", "MAGIC", "POWER", "BOOST",
+      "HELLO", "FIRSTTIME", "SPINFAST", "LUCKYCODE", "GETREWARD", "SPIN4FUN",
+      "TRYAGAIN", "WINBIG", "FREECHANCE", "SPIN2025", "GIFTSPIN", "REDEEMME",
+      "LUCKYSPIN", "MYSTERY", "HIDDENWIN", "UNLOCK", "SPINKEY", "REVEAL", "BONUSSPIN",
+      "FLASHWIN", "DAILYSPIN", "SPINSTAR", "LUCKYSHOT", "SPINBOOST", "GIFTNOW",
+      "SPINPOWER", "SPINHERO", "SPINZONE", "SPINCLUB", "SPINX", "SPINMAX", "SPINPRO",
+      "SPINKING", "SPINQUEEN", "SPINMASTER", "SPINMAGIC", "SPINRUSH", "SPINBLAST"
+    ];
+
+    const usedCodes = JSON.parse(localStorage.getItem("usedCodes") || "[]");
+
+    function drawWheel() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 140;
+      const arc = (2 * Math.PI) / segments.length;
+
+      for (let i = 0; i < segments.length; i++) {
+        const startAngle = i * arc;
+        const endAngle = startAngle + arc;
+
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + arc / 2);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(segments[i], radius - 60, 0);
+        ctx.restore();
+      }
+    }
+
+    drawWheel();
+
+    function getWeightedRandomIndex() {
+      const total = probabilities.reduce((a, b) => a + b, 0);
+      const rand = Math.random() * total;
+      let sum = 0;
+      for (let i = 0; i < probabilities.length; i++) {
+        sum += probabilities[i];
+        if (rand < sum) return i;
+      }
+      return 0;
+    }
+
+    document.getElementById("spin").addEventListener("click", () => {
+      if (spinning || freeSpins <= 0) return;
+      spinning = true;
+      freeSpins--;
+      document.getElementById("result").textContent = `لديك ${freeSpins} لفة مجانية`;
+
+      const selectedIndex = getWeightedRandomIndex();
+      const rotation = 720 + (360 / segments.length) * selectedIndex + Math.random() * (360 / segments.length);
+      let current = 0;
+
+      const interval = setInterval(() => {
+        angle += 5;
+        canvas.style.transform = `rotate(${angle}deg)`;
+        current += 5;
+        if (current >= rotation) {
+          clearInterval(interval);
+          spinning = false;
+          document.getElementById("result").textContent = `🎉 النتيجة: ${segments[selectedIndex]} | لديك ${freeSpins} لفة مجانية`;
+        }
+      }, 10);
+    });
+
+    document.getElementById("checkCode").addEventListener("click", () => {
+      const code = document.getElementById("codeInput").value.trim().toUpperCase();
+      if (validCodes.includes(code) && !usedCodes.includes(code)) {
+        freeSpins++;
+        usedCodes.push(code);
+        localStorage.setItem("usedCodes", JSON.stringify(usedCodes));
+        document.getElementById("result").textContent = `✅ تم تفعيل لفة مجانية! لديك ${freeSpins} لفة الآن`;
+        document.getElementById("codeInput").value = "";
+      } else {
+        document.getElementById("result").textContent = `❌ الكود غير صالح أو تم استخدامه مسبقًا`;
+      }
+    });
+  </script>
+</body>
+</html>
